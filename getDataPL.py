@@ -22,23 +22,23 @@ all_data_file_exists = os.path.exists(all_data_file)
 
 if all_data_file_exists:
 	all_data = cPickle.load(open(all_data_file, 'rb'))
-	players = cPickle.load(open(player_file, 'rb'))
+	#players = cPickle.load(open(player_file, 'rb'))
 else:
 	all_data_url = 'https://fantasy.premierleague.com/drf/elements/'
 	r_all = requests.get(all_data_url)
 	all_data = r_all.json()
-	for i in range(490): #486
-		playerurl = 'https://fantasy.premierleague.com/drf/element-summary/%s'
-		r = requests.get(playerurl % i)
-		# skip non-existent players
-		if r.status_code != 200: continue
-		
-		players[i] = r.json()
-		all_data[i-1]['history_past'] = players[i]['history_past']
-		all_data[i-1]['fixtures'] = players[i]['fixtures']
+	#for i in range(490): #486
+	#	playerurl = 'https://fantasy.premierleague.com/drf/element-summary/%s'
+	#	r = requests.get(playerurl % i)
+	#	# skip non-existent players
+	#	if r.status_code != 200: continue
+	#	
+	#	players[i] = r.json()
+	#	all_data[i-1]['history_past'] = players[i]['history_past']
+	#	all_data[i-1]['fixtures'] = players[i]['fixtures']
 	print date_text
-	cPickle.dump(players, open(player_file,'wb'))
-	cPickle.dump(all_data, open(all_data_file,'wb'))
+	#cPickle.dump(players, open(player_file,'wb'))
+	#cPickle.dump(all_data, open(all_data_file,'wb'))
 
 
 position_title = ['Goalkeeper', 'Defender', 'Forward', 'Midfielder']
