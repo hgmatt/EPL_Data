@@ -1,7 +1,10 @@
 from bs4 import BeautifulSoup
-import requests, time
+import requests, time, cPickle
 
 def Collect_Player_Stats(year):
+	date_text = time.strftime("%Y_%m_%d")
+	player_file = date_text + '_all_players_data.p'
+	
 	teams_espnfc = {'BOU':'http://www.espnfc.us/club/afc-bournemouth/349/squad',
 					'ARS':'http://www.espnfc.us/club/arsenal/359/squad',
 					'BUR':'http://www.espnfc.us/club/burnley/379/squad',
@@ -25,7 +28,7 @@ def Collect_Player_Stats(year):
 	team_players = {}
 	for teams in teams_espnfc.iterkeys():
 		r = requests.get(teams_espnfc[teams])
-		soup = BeautifulSoup(r.text)
+		soup = BeautifulSoup(r.text, 'html.parser')
 		squads = soup.find_all("td", class_="pla")
 		roster = {}
 		for i in squads:
@@ -41,6 +44,7 @@ def Collect_Player_Stats(year):
 		team_players[teams] = roster
 		time.sleep(1)
 	for team in team_players:
+		print team
 		for player in team_players[team]:
 			if team_players[team][player][url] != 'N/A':
 				r = requests.get(team_players[team][player][url])
@@ -71,14 +75,38 @@ def Collect_Player_Stats(year):
 					sh = [new_tag]*len(team_name)
 				if len(sg) == 0:
 					sg = [new_tag]*len(team_name)
+				#fantasy_points [g, a, sv, minutes, 
 				player_games = {}
+				n = 0
 				for game in range(len(game_date)):
+					#calculate home or away
+					home_away = oppo_name[n].text
+					home_away = home_away.split()
+					#calculate minutes played
+					game_appear = appear[n].text
+					game_appear = game_appear.replace(';','')
+					game_appear = game_appear.split()
+					if game_appear[0] == 'Started':
+						minutes = 90
+					elif game_appear[0] == 'Sub-On':
+						if len(game_appear) > 3:
+							print len(game_appear)
+							minutes = int(game_appear[3]) - int(game_appear[1])
+						else:
+							minutes = 90 - int(game_appear[1])
+					elif game_appear[0] == 'Sub-Off':
+						minutes = int(game_appear[1])
+					else:
+						minutes = 0
+					home_away = home_away[0].split()
 					game_stats = {'team_name': team_name[game].text,
-								  'oppo_name': oppo_name[game].text,
+								  'oppo_name': home_away[2],
+								  'home_away': home_away[0],
 								  'comp': comp[game].text,
 								  'game_date': game_date[game].text,
 								  'res': res[game].text,
 								  'appear': appear[game].text,
+								  'minutes': minutes,
 								  'sv': sv[game].text,
 								  'fc': fc[game].text,
 								  'fs': fs[game].text,
@@ -88,6 +116,9 @@ def Collect_Player_Stats(year):
 								  'a': a[game].text,
 								  'sh': sh[game].text,
 								  'sg': sg[game].text}
-					player_games[game_date[game].text] = game_stats
+					player_games[n] = game_stats
+					n = n+1
 				team_players[team][player]['game_stats'] = player_games
+				time.sleep(1)
+	cPickle.dump(team_players, open(player_file,'wb'))
 	return team_players

@@ -22,23 +22,23 @@ all_data_file_exists = os.path.exists(all_data_file)
 
 if all_data_file_exists:
 	all_data = cPickle.load(open(all_data_file, 'rb'))
-	#players = cPickle.load(open(player_file, 'rb'))
+	players = cPickle.load(open(player_file, 'rb'))
 else:
 	all_data_url = 'https://fantasy.premierleague.com/drf/elements/'
 	r_all = requests.get(all_data_url)
 	all_data = r_all.json()
-	#for i in range(490): #486
-	#	playerurl = 'https://fantasy.premierleague.com/drf/element-summary/%s'
-	#	r = requests.get(playerurl % i)
-	#	# skip non-existent players
-	#	if r.status_code != 200: continue
-	#	
-	#	players[i] = r.json()
-	#	all_data[i-1]['history_past'] = players[i]['history_past']
-	#	all_data[i-1]['fixtures'] = players[i]['fixtures']
+	for i in range(490): #486
+		playerurl = 'https://fantasy.premierleague.com/drf/element-summary/%s'
+		r = requests.get(playerurl % i)
+		# skip non-existent players
+		if r.status_code != 200: continue
+		
+		players[i] = r.json()
+		all_data[i-1]['history_past'] = players[i]['history_past']
+		all_data[i-1]['fixtures'] = players[i]['fixtures']
 	print date_text
-	#cPickle.dump(players, open(player_file,'wb'))
-	#cPickle.dump(all_data, open(all_data_file,'wb'))
+	cPickle.dump(players, open(player_file,'wb'))
+	cPickle.dump(all_data, open(all_data_file,'wb'))
 
 
 position_title = ['Goalkeeper', 'Defender', 'Forward', 'Midfielder']
@@ -81,8 +81,8 @@ for p in all_data:
 
 cppg ={}
 for p in all_data:
-    if p['points_per_game'] >0:
-        cppg.setdefault(p['element_type'],[]).append(10*float(p['points_per_game'])/float(p['now_cost']))    
+    if p['total_points'] >0:
+        cppg.setdefault(p['element_type'],[]).append(float(p['minutes'])/float(p['total_points']))    
 
 def poshist(axis, position):
     axis.hist(points[position])
@@ -106,10 +106,11 @@ def costhist(axis, position):
     return axis
 
 def cppghist(axis, position):
-    axis.hist(cppg[position])
+    axis.hist(cppg[position], bins=50)
+    axis.set_ylim([0,20])
     #axis.set_title(position_title[position-1])
     if axis == ax12:
-        axis.set_ylabel('15/16 PPG by \n16/17 Initial Cost')
+        axis.set_ylabel('15/16 Minutes between Fantasy Points')
     return axis
 
 fig, ((ax0, ax1, ax2, ax3), (ax4, ax5, ax6, ax7), (ax8, ax9, ax10, ax11), (ax12, ax13, ax14, ax15)) = plt.subplots(ncols=4, nrows = 4, sharey=True, figsize=(18,4*4))
@@ -134,3 +135,4 @@ cppghist(ax14, 3)
 cppghist(ax15, 4)
 
 fig.show()
+all_data
