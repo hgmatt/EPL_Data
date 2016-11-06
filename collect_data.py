@@ -178,3 +178,6 @@ def Collect_Player_Stats(year):
 	
 		cPickle.dump(team_players, open(player_file,'wb'))
 	return team_players
+
+teams_short, teams, all_data = Collect_Current_Fantasy()
+team_players = Collect_Player_Stats('2016')
